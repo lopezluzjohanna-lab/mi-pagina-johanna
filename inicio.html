@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <style>
+    body { font-family: Arial; background:#eef2f7; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
+    .box { background:white; padding:25px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1); width:320px; }
+    h2 { text-align:center; }
+    label { margin-top:10px; display:block; }
+    input { width:100%; padding:8px; border-radius:6px; border:1px solid #ccc; }
+    button { width:100%; padding:10px; background:#007bff; color:white; border:none; border-radius:6px; margin-top:15px; cursor:pointer; }
+    button:hover { background:#0056b3; }
+    .msg { text-align:center; margin-top:15px; }
+  </style>
+</head>
+<body>
+
+<div class="box">
+  <h2>Iniciar Sesión</h2>
+
+  <form id="formLogin">
+    <label>Usuario:</label>
+    <input type="text" id="usuario" required>
+
+    <label>Contraseña:</label>
+    <input type="password" id="password" required>
+
+    <button type="submit">Entrar</button>
+  </form>
+
+  <p id="mensaje" class="msg"></p>
+
+  <p style="text-align:center; margin-top:10px;">
+    <a href="registro.html">Crear cuenta</a>
+  </p>
+</div>
+
+<script>
+  document.getElementById("formLogin").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const usuario = document.getElementById("usuario").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const mensaje = document.getElementById("mensaje");
+
+    let usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+
+    const user = usuarios.find(u => u.usuario === usuario && u.password === password);
+
+    if (!user) {
+      mensaje.textContent = "❌ Usuario o contraseña incorrectos.";
+      mensaje.style.color = "red";
+      return;
+    }
+
+    localStorage.setItem("sesion", JSON.stringify(user));
+
+    window.location.href = "inicio.html";
+  });
+</script>
+
+</body>
+</html>

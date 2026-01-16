@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Proyecto - CRUD Usuarios con IMC</title>
+  <style>
+    :root{
+      --bg:#f4f7fb; --card:#fff; --accent:#2b8cff; --muted:#6b7280;
+      --danger:#e23e57; --success:#16a34a;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    body { margin:0; background:var(--bg); color:#0f172a; }
+    .container{ max-width:1050px; margin:28px auto; padding:20px; }
+    header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+    h1{ margin:0; font-size:20px; }
+    .card{ background:var(--card); border-radius:10px; box-shadow:0 6px 18px rgba(15,23,42,0.06); padding:18px; }
+    .grid{ display:grid; gap:12px; grid-template-columns: 1fr 380px; }
+    form { display:flex; flex-direction:column; gap:8px; }
+    label{ font-size:13px; color:var(--muted); }
+    input, button, select { padding:10px; border:1px solid #e6e9ef; border-radius:8px; font-size:14px; }
+    button{ cursor:pointer; background:var(--accent); color:white; border:none; }
+    button.ghost{ background:transparent; color:var(--accent); border:1px solid rgba(43,140,255,0.12); }
+    .small { font-size:12px; padding:8px 10px; border-radius:7px; }
+    table{ width:100%; border-collapse:collapse; margin-top:12px; }
+    th, td{ text-align:left; padding:8px 10px; border-bottom:1px solid #f0f2f5; }
+    .actions{ display:flex; gap:6px; }
+    .pill{ display:inline-block; padding:6px 8px; border-radius:999px; font-size:12px; background:#f3f6ff; color:var(--accent); }
+    .danger{ background: #fff1f2; color:var(--danger); border:1px solid rgba(226,62,87,0.08); }
+    .success{ background: #ecfdf5; color:var(--success); border:1px solid rgba(22,163,74,0.08); }
+    .info{ background:#f0f9ff; color: #0369a1; border:1px solid rgba(3,105,161,0.06); }
+    .center{ text-align:center; }
+    footer{ margin-top:14px; color:var(--muted); font-size:13px; }
+    @media (max-width:900px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Proyecto — CRUD de Usuarios + IMC</h1>
+        <div style="color:var(--muted); font-size:13px; margin-top:6px;">BDD: localStorage · Validación de usuario · Insertar / Mostrar / Modificar / Eliminar</div>
+      </div>
+      <div id="auth-area" class="card" style="padding:10px 14px; display:flex; gap:8px; align-items:center;">
+        <!-- Rellenado por JS -->
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- IZQUIERDA: Lista y acciones -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="margin:0;">Usuarios registrados</h3>
+          <div style="color:var(--muted); font-size:13px;" id="status-current"></div>
+        </div>
+
+        <div id="table-wrap">
+          <table id="usuarios-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Usuario</th>
+                <th>Peso (kg)</th>
+                <th>Talla (m)</th>
+                <th>IMC</th>
+                <th class="center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="usuarios-tbody">
+              <!-- rellenado por JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+          <button class="small ghost" onclick="prefillSample()">Insertar ejemplo</button>
+          <button class="small" onclick="limpiarStorage()">Borrar todo (BDD)</button>
+          <div style="margin-left:auto; color:var(--muted); font-size:13px;">Guardado en localStorage</div>
+        </div>
+      </div>
+
+      <!-- DERECHA: Form de Insert / Edit -->
+      <div class="card">
+        <h3 style="margin-top:0;">Insertar / Modificar usuario</h3>
+
+        <form id="usuario-form" onsubmit="return handleSubmit(event)">
+          <input type="hidden" id="edit-id" value="" />
+
+          <div>
+            <label for="nombre">Nombre</label>
+            <input id="nombre" required />
+          </div>
+
+          <div>
+            <label for="usuario">Usuario (login)</label>
+            <input id="usuario" required />
+          </div>
+
+          <div>
+            <label for="password">Contraseña</label>
+            <input id="password" type="password" required minlength="3" />
+          </div>
+
+          <div>
+            <label for="peso">Peso (kg)</label>
+            <input id="peso" type="number" step="0.1" min="0" required />
+          </div>
+
+          <div>
+            <label for="talla">Talla (m)</label>
+            <input id="talla" type="number" step="0.01" min="0" required />
+          </div>
+
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <button type="submit">Guardar</button>
+            <button type="button" class="ghost" onclick="resetForm()">Limpiar</button>
+          </div>
+        </form>
+
+        <hr style="margin:14px 0;" />
+
+        <div>
+          <h4 style="margin:6px 0 8px;">Cálculo IMC</h4>
+          <div style="color:var(--muted); font-size:13px; margin-bottom:8px;">
+            El IMC = peso / (talla × talla). Se calcula cuando insertas o modificas.
+          </div>
+          <div id="imc-result" class="pill">IMC aparecerá aquí</div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="center">
+      <div class="card" style="display:inline-block; padding:10px 14px; margin-top:12px;">
+        Nota: esta app usa localStorage para simular una BDD. No almacenar contraseñas en texto plano en producción.
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // KEYs en localStorage
+    const LS_KEY_USUARIOS = 'usuarios_app_bd';
+    const LS_KEY_SESSION = 'usuarios_app_session';
+
+    // Utilidades
+    function readUsuarios() {
+      const raw = localStorage.getItem(LS_KEY_USUARIOS);
+      return raw ? JSON.parse(raw) : [];
+    }
+    function writeUsuarios(arr) {
+      localStorage.setItem(LS_KEY_USUARIOS, JSON.stringify(arr));
+    }
+    function setSession(user) {
+      localStorage.setItem(LS_KEY_SESSION, JSON.stringify(user));
+      renderAuthArea();
+      renderTable();
+    }
+    function clearSession(){
+      localStorage.removeItem(LS_KEY_SESSION);
+      renderAuthArea();
+      renderTable();
+    }
+    function getSession(){
+      const s = localStorage.getItem(LS_KEY_SESSION);
+      return s ? JSON.parse(s) : null;
+    }
+
+    // IMC
+    function calcularIMC(peso, talla){
+      peso = Number(peso);
+      talla = Number(talla);
+      if (!peso || !talla || talla <= 0) return null;
+      return Math.round( (peso / (talla * talla)) * 100 ) / 100;
+    }
+
+    // Crear nuevo usuario (insert)
+    function insertarUsuario({nombre, usuario, password, peso, talla}){
+      const usuarios = readUsuarios();
+      // validación: usuario único
+      if (usuarios.some(u => u.usuario === usuario)) {
+        alert('⚠️ El usuario ya existe. Usa otro nombre de usuario.');
+        return false;
+      }
+      const id = usuarios.length ? (Math.max(...usuarios.map(u=>u.id)) + 1) : 1;
+      const imc = calcularIMC(peso, talla);
+      usuarios.push({ id, nombre, usuario, password, peso: Number(peso), talla: Number(talla), imc });
+      writeUsuarios(usuarios);
+      return true;
+    }
+
+    // Mostrar tabla
+    function renderTable(){
+      const tbody = document.getElementById('usuarios-tbody');
+      tbody.innerHTML = '';
+      const usuarios = readUsuarios();
+      const session = getSession();
+      document.getElementById('status-current').textContent = session ? `Usuario: ${session.usuario}` : 'No logueado';
+
+      if (!usuarios.length) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--muted)">No hay usuarios. Inserta uno.</td></tr>`;
+        return;
+      }
+
+      usuarios.forEach(u=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${u.id}</td>
+          <td>${escapeHtml(u.nombre)}</td>
+          <td>${escapeHtml(u.usuario)}</td>
+          <td>${u.peso ?? ''}</td>
+          <td>${u.talla ?? ''}</td>
+          <td>${(u.imc !== undefined && u.imc !== null) ? `<span class="pill">${u.imc} ${categoriaIMC(u.imc)}</span>` : ''}</td>
+          <td class="center">
+            <div class="actions">
+              <button class="small ghost" onclick="startEdit(${u.id})">Editar</button>
+              <button class="small danger" onclick="borrar(${u.id})">Eliminar</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function categoriaIMC(imc){
+      if (imc < 18.5) return '(Bajo)';
+      if (imc < 25) return '(Normal)';
+      if (imc < 30) return '(Sobrepeso)';
+      return '(Obesidad)';
+    }
+
+    // Edit flow
+    function startEdit(id){
+      const usuarios = readUsuarios();
+      const u = usuarios.find(x => x.id === id);
+      if (!u) return alert('Usuario no encontrado');
+      document.getElementById('edit-id').value = u.id;
+      document.getElementById('nombre').value = u.nombre;
+      document.getElementById('usuario').value = u.usuario;
+      document.getElementById('password').value = u.password;
+      document.getElementById('peso').value = u.peso;
+      document.getElementById('talla').value = u.talla;
+      document.getElementById('imc-result').textContent = `IMC actual: ${u.imc ?? '—'}`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function handleSubmit(e){
+      e.preventDefault();
+      const idEdit = document.getElementById('edit-id').value;
+      const nombre = document.getElementById('nombre').value.trim();
+      const usuario = document.getElementById('usuario').value.trim();
+      const password = document.getElementById('password').value;
+      const peso = parseFloat(document.getElementById('peso').value);
+      const talla = parseFloat(document.getElementById('talla').value);
+
+      if (!nombre || !usuario || !password || !peso || !talla) {
+        alert('Completa todos los campos correctamente.');
+        return;
+      }
+
+      if (!idEdit) {
+        // Insertar
+        const success = insertarUsuario({nombre, usuario, password, peso, talla});
+        if (!success) return;
+        alert('✅ Usuario insertado.');
+        resetForm();
+        renderTable();
+      } else {
+        // Modificar
+        const usuarios = readUsuarios();
+        const idx = usuarios.findIndex(u => u.id == Number(idEdit));
+        if (idx === -1) return alert('ID no encontrado.');
+        // si cambia el login, validar unicidad (excepto el mismo registro)
+        if (usuarios.some((u,i) => u.usuario === usuario && i !== idx)) {
+          return alert('⚠️ Ese nombre de usuario ya está en uso por otro registro.');
+        }
+        const imc = calcularIMC(peso, talla);
+        usuarios[idx] = {
+          ...usuarios[idx],
+          nombre, usuario, password, peso, talla, imc
+        };
+        writeUsuarios(usuarios);
+        alert('✏️ Usuario modificado.');
+        resetForm();
+        renderTable();
+      }
+      return false;
+    }
+
+    function resetForm(){
+      document.getElementById('usuario-form').reset();
+      document.getElementById('edit-id').value = '';
+      document.getElementById('imc-result').textContent = 'IMC aparecerá aquí';
+    }
+
+    function borrar(id){
+      if (!confirm('¿Eliminar este usuario?')) return;
+      const usuarios = readUsuarios().filter(u => u.id !== id);
+      writeUsuarios(usuarios);
+      alert('🗑️ Usuario eliminado.');
+      renderTable();
+    }
+
+    // Autenticación sencilla (registro / login)
+    function renderAuthArea(){
+      const area = document.getElementById('auth-area');
+      const session = getSession();
+      area.innerHTML = '';
+      if (session) {
+        const info = document.createElement('div');
+        info.style.fontSize = '13px';
+        info.innerHTML = `<strong>${escapeHtml(session.nombre)}</strong><div style="font-size:12px; color:var(--muted)">${escapeHtml(session.usuario)}</div>`;
+        const btn = document.createElement('button');
+        btn.textContent = 'Cerrar sesión';
+        btn.className = 'ghost small';
+        btn.onclick = clearSession;
+        area.appendChild(info);
+        area.appendChild(btn);
+      } else {
+        // mostrar formulario de login / link a registro
+        const loginBtn = document.createElement('button');
+        loginBtn.textContent = 'Iniciar sesión';
+        loginBtn.className = 'small';
+        loginBtn.onclick = ()=> showLoginModal();
+
+        const regBtn = document.createElement('button');
+        regBtn.textContent = 'Registrarse';
+        regBtn.className = 'small ghost';
+        regBtn.onclick = ()=> showRegisterModal();
+
+        area.appendChild(loginBtn);
+        area.appendChild(regBtn);
+      }
+    }
+
+    function showLoginModal(){
+      const promptUser = prompt('Usuario:');
+      if (!promptUser) return;
+      const promptPass = prompt('Contraseña:');
+      if (promptPass === null) return;
+      const usuarios = readUsuarios();
+      const userObj = usuarios.find(u => u.usuario === promptUser && u.password === promptPass);
+      if (!userObj) return alert('Credenciales inválidas.');
+      setSession({id: userObj.id, nombre: userObj.nombre, usuario: userObj.usuario});
+      alert('✅ Sesión iniciada.');
+    }
+
+    function showRegisterModal(){
+      const nombre = prompt('Nombre completo:');
+      if (!nombre) return;
+      const usuario = prompt('Usuario (login):');
+      if (!usuario) return;
+      const password = prompt('Contraseña:');
+      if (password === null) return;
+      // opcional: pedir peso/talla para crear el usuario de una vez
+      const peso = parseFloat(prompt('Peso (kg) (opcional, escribe 0 para omitir):') || 0);
+      const talla = parseFloat(prompt('Talla (m) (opcional, escribe 0 para omitir):') || 0);
+      const success = insertarUsuario({nombre, usuario, password, peso: peso || 0, talla: talla || 0});
+      if (success) {
+        alert('Usuario registrado. Ahora puedes iniciar sesión con tus credenciales.');
+      }
+    }
+
+    // Helpers
+    function escapeHtml(text) {
+      if (typeof text !== 'string') return text;
+      return text.replace(/[&<>"']/g, function(m){ return ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      })[m]; });
+    }
+
+    // Borrar todo (solo para demo)
+    function limpiarStorage(){
+      if (!confirm('Borrar toda la BDD (localStorage). Esta acción es irreversible.')) return;
+      localStorage.removeItem(LS_KEY_USUARIOS);
+      localStorage.removeItem(LS_KEY_SESSION);
+      renderAuthArea();
+      renderTable();
+      alert('✅ BDD borrada.');
+    }
+
+    // Insertar ejemplo rápido
+    function prefillSample(){
+      const sample = [
+        { nombre: 'Carlos López', usuario: 'carlos', password: '1234', peso: 70, talla: 1.75 },
+        { nombre: 'Ana Pérez', usuario: 'ana', password: 'abcd', peso: 60, talla: 1.68 },
+      ];
+      const users = readUsuarios();
+      // only add if users with same login missing
+      sample.forEach(s=>{
+        if (!users.some(u => u.usuario === s.usuario)) {
+          const id = users.length ? (Math.max(...users.map(u=>u.id)) + 1) : 1;
+          const imc = calcularIMC(s.peso, s.talla);
+          users.push({ id, ...s, imc });
+        }
+      });
+      writeUsuarios(users);
+      renderTable();
+      alert('Ejemplos insertados.');
+    }
+
+    // Initialize
+    (function init(){
+      renderAuthArea();
+      renderTable();
+
+      // Mostrar IMC en el panel cuando cambian peso/talla
+      const pesoInput = document.getElementById('peso');
+      const tallaInput = document.getElementById('talla');
+      function updatePreview(){
+        const p = Number(pesoInput.value);
+        const t = Number(tallaInput.value);
+        const imc = calcularIMC(p,t);
+        document.getElementById('imc-result').textContent = imc ? `IMC estimado: ${imc} ${categoriaIMC(imc)}` : 'IMC aparecerá aquí';
+      }
+      pesoInput.addEventListener('input', updatePreview);
+      tallaInput.addEventListener('input', updatePreview);
+    })();
+  </script>
+</body>
+</html>

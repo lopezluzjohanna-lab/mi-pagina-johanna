@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de Usuario</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background-color: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 320px;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    label {
+      display: block;
+      font-size: 14px;
+      margin-top: 10px;
+      color: #444;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 15px;
+      background-color: #007bff;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .message {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+    .success {
+      color: green;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Registro de Usuario</h2>
+
+    <form id="formRegistro">
+      <label for="usuario">Usuario:</label>
+      <input type="text" id="usuario" required>
+
+      <label for="password">Contraseña:</label>
+      <input type="password" id="password" required>
+
+    
+     <a href="proyecto.html"><input type="button" class="boton" onclick="validar()" value="Registrar"></a>
+    </form>
+
+    <div id="mensaje" class="message"></div>
+  </div>
+
+  <script>
+    // Escuchar el envío del formulario
+    document.getElementById("formRegistro").addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      const usuario = document.getElementById("usuario").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const mensaje = document.getElementById("mensaje");
+
+      if (usuario === "" || password === "") {
+        mensaje.textContent = "⚠️ Todos los campos son obligatorios.";
+        mensaje.className = "message error";
+        return;
+      }
+
+      // Obtener usuarios guardados en localStorage
+      let usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+
+      // Verificar si el usuario ya existe
+      const existe = usuarios.some(u => u.usuario === usuario);
+      if (existe) {
+        mensaje.textContent = "❌ El usuario ya existe. Elige otro nombre.";
+        mensaje.className = "message error";
+        return;
+      }
+
+      // Guardar nuevo usuario
+      usuarios.push({ usuario, password });
+      localStorage.setItem("usuarios", JSON.stringify(usuarios));
+
+      mensaje.textContent = "✅ Usuario registrado correctamente.";
+      mensaje.className = "message success";
+
+      // Limpiar formulario
+      document.getElementById("formRegistro").reset();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro</title>
+  <style>
+    body { font-family: Arial; background: #eef2f7; display: flex; justify-content:center; align-items:center; height:100vh; margin:0; }
+    .box { background:white; padding:25px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1); width:350px; }
+    h2 { text-align:center; }
+    label { margin-top:10px; display:block; }
+    input { width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; }
+    button { margin-top:15px; width:100%; padding:10px; background:#007bff; color:white; border:none; border-radius:6px; cursor:pointer; }
+    button:hover { background:#0056b3; }
+    .reco { margin-top:10px; background:#e8f2ff; padding:10px; border-left:4px solid #007bff; border-radius:6px; display:none; }
+    .msg { text-align:center; margin-top:15px; }
+  </style>
+</head>
+<body>
+
+<div class="box">
+  <h2>Registro</h2>
+
+  <form id="formRegistro">
+    <label>Usuario:</label>
+    <input type="text" id="usuario" required>
+
+    <label>Contraseña:</label>
+    <input type="password" id="password" required>
+
+    <label>Peso (kg):</label>
+    <input type="number" id="peso" required>
+
+    <div id="reco" class="reco"></div>
+
+    <button type="submit">Registrarse</button>
+  </form>
+
+  <p class="msg" id="mensaje"></p>
+
+  <p style="text-align:center; margin-top:10px;">
+    <a href="login.html">¿Ya tienes cuenta? Inicia sesión</a>
+  </p>
+</div>
+
+<script>
+  const pesoInput = document.getElementById("peso");
+  const reco = document.getElementById("reco");
+
+  pesoInput.addEventListener("input", () => {
+    const peso = Number(pesoInput.value);
+
+    if (!peso || peso <= 0) {
+      reco.style.display = "none";
+      return;
+    }
+
+    if (peso < 50) {
+      reco.textContent = "Peso bajo: Te conviene aumentar tu ingesta calórica y entrenar fuerza.";
+    } else if (peso > 80) {
+      reco.textContent = "Peso alto: Te conviene mejorar tu alimentación y hacer ejercicio para bajar.";
+    } else {
+      reco.textContent = "Peso en rango saludable.";
+    }
+
+    reco.style.display = "block";
+  });
+
+  document.getElementById("formRegistro").addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const usuario = document.getElementById("usuario").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const peso = document.getElementById("peso").value.trim();
+    const mensaje = document.getElementById("mensaje");
+
+    let usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+    if (usuarios.some(u => u.usuario === usuario)) {
+      mensaje.textContent = "❌ El usuario ya existe.";
+      mensaje.style.color = "red";
+      return;
+    }
+
+    usuarios.push({ usuario, password, peso });
+    localStorage.setItem("usuarios", JSON.stringify(usuarios));
+
+    mensaje.textContent = "✅ Registro exitoso.";
+    mensaje.style.color = "green";
+
+    setTimeout(() => {
+      window.location.href = "login.html";
+    }, 1000);
+  });
+</script>
+
+</body>
+</html>
